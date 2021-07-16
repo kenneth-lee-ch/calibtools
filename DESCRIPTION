@@ -1,0 +1,29 @@
+Package: calibtools
+Title: Posterior Probability Calibration Tools for Machine Learning Algorithms
+Version: 0.0.0.9000
+Authors@R: 
+   c(person("Norm", "Matloff", email = "matloff@cs.ucdavis.edu", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-9179-6785")),
+           person("Kenneth", "Lee", email = "honlee@ucdavis.edu", role = c("ctb")),
+           person("Rongkui", "Han", email = "rkbhan@ucdavis.edu", role = c("ctb")))
+Description: Tools for calibrating posterior probabilities produced by machine learning algorithms. This is related to a paper titled "A Closer Look at Probability Calibration in Multiclass Problems."
+Depends: R (>= 3.5.0)
+Maintainer: Kenneth Lee <honlee@ucdavis.edu>
+Imports: 
+  regtools,
+  RcmdrMisc,
+  CORElearn,
+  CalibratR,
+  glmgen,
+  ELiTE,
+  PRROC
+License: GPL (>= 2)
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+URL: https://github.com/kenneth-lee-ch/calibtools
+BugReports: https://github.com/kenneth-lee-ch/calibtools/issues
+Suggests: 
+    rmarkdown,
+    knitr
+VignetteBuilder: knitr

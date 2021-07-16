@@ -1,0 +1,222 @@
+---
+title: "Introduction to calibtools package in R"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{introduction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  message=FALSE,
+  warning=FALSE,
+  fig.width=6, 
+  fig.height=4,
+  comment = "#>"
+)
+```
+
+## Introduction
+
+This example will demonstrate how to use `calibtools` package. We will show how to calibrate probabilities with datasets that have more than 2 classe labels. 
+
+```{r setup, message=FALSE}
+library(regtools)
+library(calibtools)
+library(dataPreparation)
+library(caret)
+library(dplyr)
+library(ELiTE)
+```
+
+## Create toy data
+
+```{r toy data}
+# generate data from normal distribution
+X <- matrix(rnorm(n = 2000, mean = 0, sd = 1), 400, 5)
+# add labels 
+y <- sample(c(1,2,3,4), 400,replace = T)
+
+dat <- data.frame(cbind(X,y))
+dat$y <- as.factor(dat$y)
+```
+
+## Split training and test set
+
+Here, we will utilize the built-in functions in `regtools` package to split the dataset into a training and test set. 
+
+```{r}
+set.seed(299)
+svmout <- regtools::qeSVM(dat,'y', holdout = 50)
+# Get the indicies for testing
+tstIdxs <- svmout$holdIdxs
+# Get all other indicies other than testing indicies
+trnIdxs <- setdiff(1:nrow(dat),tstIdxs)
+
+# Split the dataset
+ycol <- svmout$ycol # get the label column 
+trnX <- dat[trnIdxs,-ycol] # get the training X
+trnY <- dat[trnIdxs,ycol] # get the training Y
+tstX <- dat[tstIdxs,-ycol] # get the testing X
+tstY <- dat[tstIdxs,ycol] # get the testing Y
+trn <- dat[trnIdxs,] # get the training set
+tst <- dat[tstIdxs,] # get the testing set
+```
+
+## Train a SVM model and store the decision values for each class label
+
+We will use the svm model from `e1071` package.
+
+```{r svm}
+trnMat<-matrix(NA, nrow(trn), length(levels(trnY)))
+tstMat<-matrix(NA, nrow(tst), length(levels(trnY)))
+frml <- svmout$formula
+count <- 1
+
+# For each class, we do the following
+for (i in levels(trnY)){
+  
+  # implement one-vs-all case
+  trn$y <- as.factor(ifelse(trnY==i, 1, 0))
+  
+  # fit SVM
+  model <- e1071::svm(frml,data=trn,kernel = "radial",decision.values=TRUE)
+  
+  # store the decision values
+  trnMat[,count] <- model$decision.values
+  pred <- predict(model, tst, decision.values = TRUE)
+  tstMat[,count] <- as.vector(attr(pred, "decision.values"))
+  
+  # Implement counter for looping through all classes
+  count <- count + 1
+}
+```
+
+## Implement Platt scaling with different orders of polynomial
+
+We can calibrate the probability and plot the reliability diagram to show the calibration performance at the same time by using `calibWrap()`. We can also extract numerical result about the performance by using `combineMeasures()`.
+
+```{r platt}
+# first-order
+plt_1 <- calibWrap(trnY,
+                   tstY,
+                   trnMat, 
+                   tstMat,
+                   'plattCalib',
+                   opts=list(deg=1))
+
+result <- combineMeasures(tstY, "Platt1", plt_1$probs)
+
+# Second-order platt
+plt_2 <- calibWrap(trnY,
+                   tstY,
+                   trnMat, 
+                   tstMat,
+                   'plattCalib', 
+                   opts=list(deg=2)) 
+
+# Get measure
+result <- combineMeasures(tstY,"Platt2", plt_2$probs, result)
+```
+
+## Calibrate probability without plotting reliability diagrams
+
+Below we show how to obtain the calibrated probabilities directly without plotting the reliability diagrams.
+
+```{r calibrate-withoutplot}
+plt_1_prob <- ovaCalib(trnY,trnMat, tstMat, 'plattCalib' ,deg=1)
+```
+
+## Plotting all class labels all at once in one plot
+
+We may want to look at all the reliability diagrams altogether in one plot, then we can do the following. You can adjust the color by changing the `style` argument from 1 to 3. 
+
+```{r all-in-one-plot}
+calibWrap(trnY,
+          tstY,
+          trnMat, 
+          tstMat,
+          'plattCalib',
+          oneAtATime = F,
+          opts=list(deg=1),
+          style=3)
+```
+
+## Plotting all class labels all at once with separate plots
+
+We can also create one plot that shows the performances of calibrating each class probability.
+
+```{r separateplots}
+par(mar=c(1,1,1,1))
+calibWrap(trnY,
+          tstY,
+          trnMat, 
+          tstMat,
+          'plattCalib',
+          plotsPerRow= 2,
+          oneAtATime = F,
+          opts=list(deg=1))
+
+```
+
+
+## Various calibration methods
+
+Besides platting scaling, `calibtools` provides isotonic regression, knn-based methods, Bayesian Binning into Quantiles (BBQ), Ensemble of Linear Trend Estimation (ELiTe). Here we use various performance measures: Root mean squared error (RMSE), area under ROC (AUROC), accuracy (ACC), maximum calibration error (MCE), empirical calibration error (ECE) and area under precision and recall curve (AUPRC). For details, please refer to the paper titled "A Closer Look at Probability Calibration in Multiclass Problems".
+
+```{r calibration methods}
+# isotonic regression
+iso <- calibWrap(trnY,
+                 tstY,
+                 trnMat, 
+                 tstMat,
+                 'isoCalib')
+
+result <- combineMeasures(tstY, "IsoReg", iso$probs, result)
+
+
+bbq <- calibWrap(trnY,
+                 tstY,
+                 trnMat, 
+                 tstMat,
+                 'BBQCalib')
+
+
+result <- combineMeasures(tstY, "BBQ", bbq$probs, result)
+
+elite_res <- calibWrap(trnY,
+                       tstY,
+                       trnMat, 
+                       tstMat,
+                       'ELiTECalib')
+
+
+result <- combineMeasures(tstY, "Elite", elite_res$probs, result)
+
+# KNN with 51 neighbors
+knn51 <- calibWrap(trnY,
+                   tstY,
+                   trnMat, 
+                   tstMat,
+                   'knnCalib', opts = list(k=51, scaleX = F))
+
+
+result <- combineMeasures(tstY, "knn51", knn51$probs, result)
+
+
+# Local linear KNN with 51 neighbors
+lknn51 <- calibWrap(trnY,
+                    tstY,
+                    trnMat, 
+                    tstMat,
+                    'locLinknnCalib', opts = list(k=51, scaleX =F),
+                    smoothingFtn=loclin)
+
+
+# Other performance measure calibration
+
+result <- combineMeasures(tstY, "lknn51", lknn51$probs, result)
+result
+```

@@ -701,7 +701,7 @@ eliteCalib <- function(trnY,trnScores, tstScores, build_opt = "AICc", pred_opt=1
 #' @export
 getCalibMeasures <- function(y, scores){
 
-  df <- as.data.frame(elite.getMeasures(scores, y))
+  df <- as.data.frame(ELiTE::elite.getMeasures(scores, y))
 
   # change the colname names so that we state AUROC clearly
   colnames(df) <- c("RMSE","AUROC","ACC","MCE","ECE")

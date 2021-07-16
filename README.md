@@ -7,8 +7,11 @@ devtools::install_github("kenneth-lee-ch/calibtools")
 
 ```
 
+# Getting started
+Please see this [example](https://github.com/kenneth-lee-ch/calibtools/blob/main/vignettes/introduction.md)
+
 # Reference
-Please refer to the paper "A Closer Look at Probability Calibration in Multiclass Problems".
+Please refer to the paper "A Closer Look at Probability Calibration in Multiclass Problems" for details.
 
 
 

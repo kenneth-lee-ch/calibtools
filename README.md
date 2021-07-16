@@ -7,7 +7,7 @@ To install this R package, please run the following code in R
 ```
 devtools::install_github("kenneth-lee-ch/calibtools")
 ```
-Then, please see this [example](https://github.com/kenneth-lee-ch/calibtools/blob/main/vignettes/introduction.md) for showing how to use the package.
+Then, please see this [example](https://github.com/kenneth-lee-ch/calibtools/blob/main/vignettes/introduction.md) for learning how the package can be used.
 
 # Reference
 Please refer to the paper "A Closer Look at Probability Calibration in Multiclass Problems" for details.

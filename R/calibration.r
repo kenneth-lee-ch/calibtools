@@ -1006,7 +1006,7 @@ reliabDiagram <- function(y,probs,nBins,plotGraph=TRUE,zoom=NULL,classNum=NULL,
     record = list()
     for(class in 1:nClass){
 
-      probsBinNums <- regtools::findInterval(probs[,class],breaks)
+      probsBinNums <- findInterval(probs[,class],breaks)
       fittedYCounts <- tapply(probs[,class],probsBinNums,mean)
       actualYCounts <- tapply(ym[,class],probsBinNums,mean)
       axisLimit <- 1
@@ -1105,7 +1105,7 @@ reliabDiagram <- function(y,probs,nBins,plotGraph=TRUE,zoom=NULL,classNum=NULL,
 
   }else{
     breaks <- seq(0,1,1/nBins)
-    probsBinNums <- regtools::findInterval(probs,breaks)
+    probsBinNums <- findInterval(probs,breaks)
     fittedYCounts <- tapply(probs,probsBinNums,sum)
     actualYCounts <- tapply(y,probsBinNums,sum)
     axisLimit <- max(max(fittedYCounts),max(actualYCounts))

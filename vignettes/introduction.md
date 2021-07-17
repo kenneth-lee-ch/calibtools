@@ -27,7 +27,7 @@ dat <- data.frame(cbind(X,y))
 dat$y <- as.factor(dat$y)
 ```
 
-Split training and test set
+Split the data into training and test sets
 ---------------------------
 
 Here, we will utilize the built-in functions in `regtools` package to
